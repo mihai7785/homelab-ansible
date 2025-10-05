@@ -1,0 +1,43 @@
+---
+- name: Safe updates (Debian/Ubuntu)
+  hosts: all
+  gather_facts: yes
+  vars:
+    reboot_ok: false       # can be overridden by Survey/extra vars
+    apt_cache_valid_time: 3600
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: "{{ apt_cache_valid_time }}"
+      when: ansible_facts.os_family == "Debian"
+
+    - name: Dist upgrade
+      ansible.builtin.apt:
+        upgrade: dist
+      register: upgraded
+      when: ansible_facts.os_family == "Debian"
+
+    - name: Check if reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_flag
+      when: ansible_facts.os_family == "Debian"
+
+    - name: Reboot if allowed and required
+      ansible.builtin.reboot:
+        msg: "Reboot triggered by AWX after updates"
+        connect_timeout: 30
+        reboot_timeout: 900
+      when:
+        - ansible_facts.os_family == "Debian"
+        - reboot_ok | bool
+        - reboot_flag.stat.exists | default(false)
+
+    - name: Report result
+      ansible.builtin.debug:
+        msg:
+          upgraded: "{{ upgraded is defined and upgraded.changed }}"
+          reboot_required: "{{ reboot_flag.stat.exists | default(false) }}"
+          reboot_performed: "{{ (reboot_ok | bool) and (reboot_flag.stat.exists | default(false)) }}"
