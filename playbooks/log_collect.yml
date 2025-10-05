@@ -1,0 +1,45 @@
+---
+- name: Collect auth/syslog tails as artifacts
+  hosts: all
+  gather_facts: no
+  vars:
+    lines: 1500
+
+  tasks:
+    - name: Create temp files
+      ansible.builtin.command: mktemp /tmp/awx_auth_XXXXXX
+      register: auth_tmp
+      changed_when: false
+    - ansible.builtin.command: mktemp /tmp/awx_syslog_XXXXXX
+      register: syslog_tmp
+      changed_when: false
+
+    - name: Tail auth log (or journal if missing)
+      ansible.builtin.shell: |
+        if [ -f /var/log/auth.log ]; then
+          tail -n {{ lines }} /var/log/auth.log > {{ auth_tmp.stdout }};
+        else
+          journalctl -u ssh -n {{ lines }} --no-pager > {{ auth_tmp.stdout }};
+        fi
+      changed_when: false
+
+    - name: Tail syslog
+      ansible.builtin.shell: |
+        if [ -f /var/log/syslog ]; then
+          tail -n {{ lines }} /var/log/syslog > {{ syslog_tmp.stdout }};
+        else
+          journalctl -n {{ lines }} --no-pager > {{ syslog_tmp.stdout }};
+        fi
+      changed_when: false
+
+    - name: Fetch auth tail
+      ansible.builtin.fetch:
+        src: "{{ auth_tmp.stdout }}"
+        dest: "artifacts/{{ inventory_hostname }}/"
+        flat: yes
+
+    - name: Fetch syslog tail
+      ansible.builtin.fetch:
+        src: "{{ syslog_tmp.stdout }}"
+        dest: "artifacts/{{ inventory_hostname }}/"
+        flat: yes
