@@ -1,0 +1,16 @@
+# group_vars/all.yml
+# Safe defaults that apply to every host. Do NOT put secrets here.
+
+ansible_python_interpreter: /usr/bin/python3
+
+# If some tasks need privilege escalation:
+# ansible_become: true
+# ansible_become_method: sudo
+
+# Optional: a subset you can reference in playbooks for faster fact gathering
+gather_min_subset:
+  - min
+  - "!hardware"
+  - "!network"
+  - "!services"
+  - "!mounts"
