@@ -1,0 +1,7 @@
+ansible_python_interpreter: /usr/bin/python3
+
+# Public keys allowed to log in as 'ansible' on all hosts
+automation_pubkeys:
+  - "{{ lookup('file', '{{ playbook_dir }}/../files/keys/devvm_id_ed25519.pub') }}"
+  - "{{ lookup('file', '{{ playbook_dir }}/../files/keys/awx_id_ed25519.pub' ) }}"
+ansible_user: ansible
