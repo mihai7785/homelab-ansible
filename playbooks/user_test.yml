@@ -1,0 +1,11 @@
+---
+- name: Test user management
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Ensure a test user exists
+      ansible.builtin.user:
+        name: ansible_tester
+        comment: "Temporary test user"
+        state: present
+        shell: /bin/bash

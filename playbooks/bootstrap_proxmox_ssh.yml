@@ -1,0 +1,20 @@
+---
+- name: Bootstrap SSH keys for Proxmox root (no sudo)
+  hosts: homelab-proxmox
+  gather_facts: false
+  tasks:
+    - name: Ensure /root/.ssh exists
+      ansible.builtin.file:
+        path: /root/.ssh
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Install automation public keys for root
+      ansible.builtin.authorized_key:
+        user: root
+        key: "{{ item }}"
+        state: present
+        manage_dir: false
+      loop: "{{ automation_pubkeys }}"
