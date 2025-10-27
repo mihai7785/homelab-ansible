@@ -1,0 +1,24 @@
+---
+- name: Show minimal system facts
+  hosts: all
+  gather_facts: true
+
+  vars:
+    show_keys:
+      - ansible_fqdn
+      - ansible_hostname
+      - ansible_distribution
+      - ansible_distribution_version
+      - ansible_kernel
+      - ansible_architecture
+      - ansible_default_ipv4
+      - ansible_selinux
+      - ansible_virtualization_type
+
+  tasks:
+    - name: Print selected facts
+      ansible.builtin.debug:
+        msg: >-
+          {{ item }} = {{ hostvars[inventory_hostname][item] | default('N/A') }}
+      loop: "{{ show_keys }}"
+
